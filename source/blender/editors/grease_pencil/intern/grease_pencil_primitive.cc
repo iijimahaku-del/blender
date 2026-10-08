@@ -497,6 +497,13 @@ static void grease_pencil_primitive_update_curves(PrimitiveToolOperation &ptd)
   /* Screen-space length along curve used as randomization parameter. */
   Array<float> lengths(new_points_num);
 
+  // testing
+
+  float pressure_sum = 0.0f;
+  int pressure_count = 0;
+
+  // testing
+
   for (const int point : curve_points.index_range()) {
     float pressure = 1.0f;
     /* Apply pressure curve. */
@@ -504,6 +511,11 @@ static void grease_pencil_primitive_update_curves(PrimitiveToolOperation &ptd)
       const float t = point / float(new_points_num - 1);
       pressure = BKE_curvemapping_evaluateF(gset->cur_primitive, 0, t);
     }
+
+    // testing
+    pressure_sum += pressure;
+    pressure_count++;
+    // testing
 
     const float radius = ed::greasepencil::radius_from_input_sample(ptd.vc.rv3d,
                                                                     ptd.region,
@@ -545,6 +557,21 @@ static void grease_pencil_primitive_update_curves(PrimitiveToolOperation &ptd)
           *ptd.settings, ptd.stroke_random_rotation_factor, lengths[point], pressure);
     }
   }
+
+  // testing
+  const float average_pressure = pressure_count > 0 ? pressure_sum / pressure_count : 1.0f;
+  ptd.fill_opacity = ptd.brush->alpha * average_pressure;
+
+  if (ptd.use_fill) {
+    bke::MutableAttributeAccessor fill_attributes = curves.attributes_for_write();
+
+    bke::SpanAttributeWriter<float> fill_opacities =
+        fill_attributes.lookup_or_add_for_write_span<float>("fill_opacity",
+                                                            bke::AttrDomain::Curve);
+    fill_opacities.span[target_curve_index] = ptd.fill_opacity;
+    fill_opacities.finish();
+  }
+  // testing
 
   point_attributes_to_skip.add_multiple({"position", "radius", "opacity"});
   if (ptd.vertex_color) {
