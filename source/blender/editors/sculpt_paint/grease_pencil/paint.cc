@@ -707,6 +707,16 @@ struct PaintOperationExecutor {
 
     const int active_curve = on_back ? curves.curves_range().first() :
                                        curves.curves_range().last();
+
+    //testing
+    if(bke::SpanAttributeWriter<float> fill_opacities = attributes.lookup_or_add_for_write_span<float>("fill_opacity", 
+                                                                                                        bke::AttrDomain::Curve, 
+                                                                                                        bke::AttributeInitValue(1.0f))){
+      fill_opacities.span[active_curve] = extension_sample.pressure;
+      fill_opacities.finish();
+    }
+    //testing
+                                       
     const IndexRange curve_points = points_by_curve[active_curve];
     const int last_active_point = curve_points.last();
 
